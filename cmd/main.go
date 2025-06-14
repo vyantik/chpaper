@@ -2,29 +2,14 @@ package main
 
 import (
 	"flag"
-	"image"
-	"image/jpeg"
 	"image/png"
-	"io"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
-	"slices"
 	"strings"
-
-	"github.com/chai2010/webp"
+	"sync"
 )
-
-var mimetypes = []string{"jpeg", "jpg", "png", "webp"}
-
-var decoders = map[string]func(i io.Reader) (image.Image, error){
-	"jpeg": jpeg.Decode,
-	"jpg":  jpeg.Decode,
-	"png":  png.Decode,
-	"webp": webp.Decode,
-}
-
-const outputPath = "/home/vyantik/.config/hypr/wallpaper/wallpaper.png"
 
 func main() {
 	imgPathPtr := flag.String("path", "", "path to the image you want to change the wallpaper insted of current one")
@@ -43,30 +28,39 @@ func main() {
 	if len(mimetypeFromSplit) < 1 {
 		log.Fatalln("is not image")
 	}
-	if isValidImage := isImage(mimetypeFromSplit[0]); isValidImage == false {
+	if isValidImage := isImage(mimetypeFromSplit[0]); !isValidImage {
 		log.Fatalln("is not image")
 	}
 
 	convertImageToPNG(imgPath, outputPath)
+	generateNewColors(imgPath)
+	var wg sync.WaitGroup
+	for _, scriptPath := range scripts {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			execPython(scriptPath)
+		}()
+	}
+	wg.Wait()
+
+
+	for _, processToRestart := range processes{
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			processToRestart()
+		}()
+	}
+
+	wg.Wait()
+
+	log.Println("All passed good... chill bro :)")
 }
 
-func fileExist(path string) bool {
-	info, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		log.Fatalln("image doesn't exist through this path")
-	}
-	if err != nil {
-		log.Fatalln("internal error")
-	}
-	return !info.IsDir()
-}
 
-func isImage(filetype string) bool {
-	return slices.Contains(mimetypes, filetype)
-}
 
 func convertImageToPNG(inputPath, outputPath string) {
-
 	log.Println("outputPath:", outputPath)
 
 	inFile, err := os.Open(inputPath)
@@ -79,7 +73,7 @@ func convertImageToPNG(inputPath, outputPath string) {
 
 	decodeFunc, ok := decoders[ext]
 	if !ok {
-		log.Fatalf("unsupported input image format.")
+		log.Fatalln("unsupported input image format.")
 	}
 
 	img, err := decodeFunc(inFile)
@@ -97,4 +91,19 @@ func convertImageToPNG(inputPath, outputPath string) {
 	if err != nil {
 		log.Fatalln("failed to encode image to PNG")
 	}
+}
+
+func generateNewColors(wallpaperPath string) {
+	if !fileExist(wallpaperPath) {
+		log.Fatalln("image doesn't exist")
+	}
+	expandedPath, err := expandTilde(wallpaperPath)
+	if err != nil {
+		log.Fatalln("can't get path from tilda contained path")
+	}
+	cmd := exec.Command("wal", "-i", expandedPath)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		log.Fatalf("error when exec 'wal': %v\nOutput: %s\n", err, output)
+	}
+	log.Println("command 'wal' success")
 }
