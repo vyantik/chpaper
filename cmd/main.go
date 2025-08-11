@@ -39,13 +39,16 @@ func main() {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			execPython(scriptPath)
+			extendedPath, err := expandTilde(scriptPath)
+			if err != nil {
+				log.Fatalln("can't get path from tilda contained path")
+			}
+			execPython(extendedPath)
 		}()
 	}
 	wg.Wait()
 
-
-	for _, processToRestart := range processes{
+	for _, processToRestart := range processes {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -58,10 +61,12 @@ func main() {
 	log.Println("All passed good... chill bro :)")
 }
 
-
-
 func convertImageToPNG(inputPath, outputPath string) {
 	log.Println("outputPath:", outputPath)
+	expandedPath, err := expandTilde(outputPath)
+	if err != nil {
+		log.Fatalln("can't get path from tilda contained path")
+	}
 
 	inFile, err := os.Open(inputPath)
 	if err != nil {
@@ -81,7 +86,7 @@ func convertImageToPNG(inputPath, outputPath string) {
 		log.Fatalln("failed to decode image from")
 	}
 
-	outFile, err := os.Create(outputPath)
+	outFile, err := os.Create(expandedPath)
 	if err != nil {
 		log.Fatalln("failed to create output file")
 	}
