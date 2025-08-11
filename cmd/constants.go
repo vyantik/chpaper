@@ -18,7 +18,7 @@ var decoders = map[string]func(i io.Reader) (image.Image, error){
 	"webp": webp.Decode,
 }
 
-const outputPath = "/home/vyantik/.config/hypr/wallpaper/wallpaper.png"
+const outputPath = "~/.config/hypr/wallpaper/wallpaper.png"
 
 var scripts = []string{
 	"~/.config/hypr/set_wal_colors.py",
