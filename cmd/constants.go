@@ -21,8 +21,8 @@ var decoders = map[string]func(i io.Reader) (image.Image, error){
 const outputPath = "/home/vyantik/.config/hypr/wallpaper/wallpaper.png"
 
 var scripts = []string{
-	"/home/vyantik/.config/hypr/set_wal_colors.py",
-	"/home/vyantik/.config/kitty/set_wal_colors.py",
+	"~/.config/hypr/set_wal_colors.py",
+	"~/vyantik/.config/kitty/set_wal_colors.py",
 }
 
 var processes = []func(){
