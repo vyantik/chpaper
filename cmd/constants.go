@@ -22,7 +22,7 @@ const outputPath = "/home/vyantik/.config/hypr/wallpaper/wallpaper.png"
 
 var scripts = []string{
 	"~/.config/hypr/set_wal_colors.py",
-	"~/vyantik/.config/kitty/set_wal_colors.py",
+	"~/.config/kitty/set_wal_colors.py",
 }
 
 var processes = []func(){
