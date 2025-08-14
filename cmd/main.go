@@ -24,11 +24,12 @@ func main() {
 	if !fileExist(imgPath) {
 		log.Fatalln("pass the image, not dir")
 	}
-	mimetypeFromSplit := strings.Split(imgPath, ".")[1:]
-	if len(mimetypeFromSplit) < 1 {
+
+	ext := strings.ToLower(strings.TrimPrefix(filepath.Ext(imgPath), "."))
+	if ext == "" {
 		log.Fatalln("is not image")
 	}
-	if isValidImage := isImage(mimetypeFromSplit[0]); !isValidImage {
+	if isValidImage := isImage(ext); !isValidImage {
 		log.Fatalln("is not image")
 	}
 
